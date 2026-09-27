@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block title %}Sign in · Illyriad Notifier{% endblock %}{% block content %}
+<section class="login panel">
+<span class="eyebrow">WELCOME BACK</span>
+<h1>Your empire’s inbox.</h1>
+<p class="muted">The updates you care about, in one place.</p>
+{% if error %}
+<p class="error" role="alert">{{ error }}</p>
+{% endif %}
+<form method="post" action="/login">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<label>Administrator password<input type="password" name="password" autocomplete="current-password" required maxlength="200" autofocus>
+</label>
+<button class="primary wide">Sign in</button>
+</form>
+<p class="hint">Use the administrator password configured during installation.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}{% block title %}Rule preview · Illyriad Notifier{% endblock %}{% block content %}
+<a class="back" href="/rules">← Rules</a>
+<div class="page-heading">
+<div>
+<span class="eyebrow">PREVIEW ONLY</span>
+<h1>{{ rule.name }}</h1>
+<p class="muted">{{ matches|length }} matches among the latest {{ sampled }} notifications.</p>
+</div>
+</div>
+<div class="notice">Nothing was saved or sent. This checks the rule in isolation; earlier rules may take precedence. Use your browser’s Back button to return to the form and save it.</div>
+<section class="panel padded">
+<h2>Matching notifications</h2>
+{% for event in matches %}
+<article class="preview-item">
+<a href="/notifications/{{ event.id }}">{{ event.detail[:200] }}</a>
+<p class="hint">Town {{ event.town_id }} · Type {{ event.type_id }} · {{ event.occurred_at[:19].replace('T',' ') }} UTC</p>
+</article>
+{% else %}
+<p class="muted">No matches. Check the selections and whether the rule is enabled.</p>
+{% endfor %}
+</section>
+{% endblock %}

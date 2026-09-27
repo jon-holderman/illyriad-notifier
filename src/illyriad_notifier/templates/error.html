@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block content %}
+<section class="panel padded">
+<h1>That couldn’t be completed</h1>
+<p class="error" role="alert">{{ error }}</p>
+<p class="muted">Use your browser’s Back button to return to the form, or open Settings to check the connection.</p>
+<a class="button" href="/settings">Settings</a>
+</section>
+{% endblock %}

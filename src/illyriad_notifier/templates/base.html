@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>
+{% block title %}Illyriad Notifier{% endblock %}
+</title>
+<link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+<a class="brand" href="/">
+<span class="brand-mark">iN</span>
+<span>Illyriad <strong>Notifier</strong>
+<small>YOUR EMPIRE, AT A GLANCE</small>
+</span>
+</a>
+{% if request.session.get('user') %}
+<nav aria-label="Main navigation">
+<a href="/" {% if path == '/' or path.startswith('/notifications') %}aria-current="page"{% endif %}>Inbox</a>
+<a href="/rules" {% if path.startswith('/rules') %}aria-current="page"{% endif %}>Rules</a>
+<a href="/settings" {% if path.startswith('/settings') %}aria-current="page"{% endif %}>Settings</a>
+</nav>
+<form method="post" action="/logout">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<button class="quiet">Sign out</button>
+</form>
+{% endif %}
+</header>
+<main id="main">
+{% if demo %}
+<div class="notice">Demo installation · All notifications and delivery statuses are fictional.</div>
+{% endif %}{% if notice %}
+<div class="notice" role="status">{{ notice }}</div>
+{% endif %}{% block content %}{% endblock %}
+</main>
+<footer>
+<span>Illyriad Notifier <span class="muted">/ 0.1.0</span>
+</span>
+<span>Self-hosted · All times UTC</span>
+</footer>
+</body>
+</html>

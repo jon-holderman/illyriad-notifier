@@ -1,0 +1,140 @@
+{% extends 'base.html' %}{% block title %}Settings · Illyriad Notifier{% endblock %}{% block content %}
+<div class="page-heading">
+<div>
+<span class="eyebrow">YOUR CONNECTIONS</span>
+<h1>Settings & status</h1>
+<p class="muted">Connect your empire. Choose where updates arrive.</p>
+</div>
+<span class="badge">Single account · Private installation</span>
+</div>
+<form method="post" action="/settings">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<div class="detail-grid">
+<section class="panel padded">
+<div class="section-heading flush">
+<h2>01 <span class="muted">/</span> Illyriad feed</h2>
+<span class="badge {{ 'sent' if configured.api_key else '' }}">{{ 'Key saved' if configured.api_key else 'Not configured' }}</span>
+</div>
+<label>Recent Notifications API key<input type="password" name="api_key" autocomplete="new-password" placeholder="{{ 'Saved securely · leave blank to keep' if configured.api_key else 'elgea-NOTIF-…' }}" maxlength="1100">
+</label>
+<p class="hint">Paste the key itself, without the URL. It is encrypted on disk and never displayed. Replacing a key must retain the same player.</p>
+<label>Poll every (minutes)<input type="number" name="poll_minutes" min="60" max="1440" value="{{ settings.poll_minutes }}" required>
+</label>
+<p class="hint">A conservative 60-minute minimum applies to scheduled and manual fetches, including after restart.</p>
+<label>Keep notification history (days)<input type="number" name="retention_days" min="1" max="3650" value="{{ settings.retention_days }}" required>
+</label>
+<p class="hint">Measured from import time. Pending and failed deliveries are retained. Compact duplicate-prevention IDs are kept indefinitely.</p>
+</section>
+<section class="panel padded">
+<div class="section-heading flush">
+<h2>02 <span class="muted">/</span> ntfy delivery</h2>
+<span class="badge {{ 'sent' if settings.delivery_enabled else '' }}">{{ 'Enabled' if settings.delivery_enabled else 'Paused' }}</span>
+</div>
+<label>Server URL<input type="url" name="ntfy_url" value="{{ settings.ntfy_url }}" placeholder="https://ntfy.example.com">
+</label>
+<label>Default topic<input name="topic" value="{{ settings.topic }}" maxlength="64" required>
+</label>
+<label>Access token <span class="hint">Optional</span>
+<input type="password" name="ntfy_token" autocomplete="new-password" placeholder="{{ 'Saved securely · leave blank to keep' if configured.ntfy_token else 'tk_…' }}" maxlength="2000">
+</label>
+<label class="checkbox">
+<input type="checkbox" name="clear_ntfy_token" value="true">Remove saved ntfy token</label>
+<label class="checkbox">
+<input type="checkbox" name="delivery_enabled" value="true" {% if settings.delivery_enabled %}checked{% endif %}>Enable forwarding to ntfy</label>
+<p class="hint">When paused, matching events remain queued. Enabling delivery sends the queued events. Rules can override topic and priority.</p>
+</section>
+</div>
+<div class="save-bar">
+<p class="hint">The first successful import is inbox-only, even with forwarding enabled.</p>
+<button class="primary">Save settings</button>
+</div>
+</form>
+<section class="panel padded">
+<div class="section-heading flush">
+<h2>Connection health</h2>
+<div class="actions">
+<form method="post" action="/settings/poll">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<button>Fetch / test saved feed</button>
+</form>
+<form method="post" action="/settings/test-ntfy">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<button>Send ntfy test</button>
+</form>
+</div>
+</div>
+<p class="hint">Save changes above before testing. The ntfy test sends one message, even when forwarding is paused.</p>
+<dl class="health-grid">
+<div>
+<dt>Player</dt>
+<dd>{{ meta.get('player_id','Not connected') }}</dd>
+</div>
+<div>
+<dt>Last successful fetch</dt>
+<dd>{{ meta.get('last_success','Not yet fetched') }}</dd>
+</div>
+<div>
+<dt>Next eligible fetch</dt>
+<dd>{{ meta.get('next_poll','After configuration') }}</dd>
+</div>
+<div>
+<dt>New events on last fetch</dt>
+<dd>{{ meta.get('last_import_count','—') }}</dd>
+</div>
+</dl>
+{% if meta.get('last_error') %}
+<p class="error" role="alert">{{ meta.last_error }}</p>
+{% endif %}
+</section>
+<section class="panel padded">
+<h2>Friendly names</h2>
+<p class="muted">Give numeric town, type, and category IDs recognizable names. Matching always uses the stable ID.</p>
+<form method="post" action="/settings/labels">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<div class="form-grid">
+<label>Kind<select name="kind">
+<option value="town">Town</option>
+<option value="type">Notification type</option>
+<option value="category">Overall category</option>
+</select>
+</label>
+<label>ID<input name="source_id" inputmode="numeric" pattern="-?[0-9]+" required>
+</label>
+<label>Display name<input name="label" maxlength="100" placeholder="Blank removes your override">
+</label>
+</div>
+<button>Save label</button>
+</form>
+<details>
+<summary>IDs observed in your feed</summary>
+<div class="form-grid">
+{% for kind,items in catalog.items() %}
+<div>
+<h3>{{ kind|capitalize }}</h3>
+{% for item in items %}
+<p class="hint">
+<code>{{ item.id }}</code> {{ item.label }}</p>
+{% else %}
+<p class="hint">None yet</p>
+{% endfor %}
+</div>
+{% endfor %}
+</div>
+</details>
+</section>
+<details class="panel padded">
+<summary>Change administrator password</summary>
+<form method="post" action="/settings/password">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<div class="form-grid">
+<label>Current password<input type="password" name="current_password" autocomplete="current-password" required maxlength="200">
+</label>
+<label>New password<input type="password" name="new_password" autocomplete="new-password" minlength="12" maxlength="200" required>
+</label>
+<label>Confirm new password<input type="password" name="confirm_password" autocomplete="new-password" minlength="12" maxlength="200" required>
+</label>
+</div>
+<button>Change password & sign out</button>
+</form>
+</details>
+{% endblock %}

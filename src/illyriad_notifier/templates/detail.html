@@ -1,0 +1,79 @@
+{% extends 'base.html' %}{% block title %}Notification {{ event.id }} · Illyriad Notifier{% endblock %}{% block content %}
+<a class="back" href="/">← Back to inbox</a>
+<div class="page-heading">
+<div>
+<span class="eyebrow">NOTIFICATION #{{ event.id }}</span>
+<h1>Notification details</h1>
+<p class="muted">{{ event.occurred_at[:19].replace('T',' ') }} UTC · Town {{ event.town_id }}</p>
+</div>
+<span class="badge {{ event.status }}">{{ {'kept':'Inbox only','history':'Initial history'}.get(event.status,event.status|capitalize) }}</span>
+</div>
+<div class="detail-grid">
+<section class="panel padded">
+<h2>Message</h2>
+<div class="message">{{ event.detail }}</div>
+<form method="post" action="/notifications/{{ event.id }}/read">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<input type="hidden" name="read" value="{{ 'false' if event.is_read else 'true' }}">
+<button>{{ 'Mark unread' if event.is_read else 'Mark read' }}</button>
+</form>
+</section>
+<aside class="panel padded">
+<h2>Delivery decision</h2>
+<p>{{ event.reason }}</p>
+<dl>
+<dt>Type</dt>
+<dd>{{ event.type_label or 'Type' }} · {{ event.type_id }}</dd>
+<dt>Category</dt>
+<dd>{{ event.category_label or 'Category' }} · {{ event.category_id }}</dd>
+<dt>Town</dt>
+<dd>{{ event.town_label or 'Town' }} · {{ event.town_id }}</dd>
+<dt>Destination topic</dt>
+<dd>{{ event.topic }}</dd>
+<dt>Priority</dt>
+<dd>{{ event.priority }} / 5</dd>
+<dt>Attempts in this cycle</dt>
+<dd>{{ event.attempts }}</dd>
+{% if event.status=='pending' %}
+<dt>Eligible for next attempt</dt>
+<dd>{{ event.next_attempt[:19].replace('T',' ') }} UTC</dd>
+{% endif %}
+</dl>
+{% if event.status=='failed' %}
+<form method="post" action="/notifications/{{ event.id }}/retry">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<button class="primary">Retry delivery</button>
+</form>
+{% endif %}
+</aside>
+</div>
+<section class="panel padded">
+<h2>Delivery history</h2>
+{% if event.deliveries %}
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Attempted · UTC</th>
+<th>Result</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+{% for item in event.deliveries %}
+<tr>
+<td>{{ item.attempted_at[:19].replace('T',' ') }}</td>
+<td>
+<span class="badge {{ item.outcome }}">{{ item.outcome }}</span>
+</td>
+<td>{{ item.message }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No delivery attempts. Reading a notification does not forward it.</p>
+{% endif %}
+</section>
+{% endblock %}

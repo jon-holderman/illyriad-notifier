@@ -1,0 +1,20 @@
+services:
+  notifier:
+    build:
+      context: .
+      dockerfile: Containerfile
+    ports:
+      - "${NOTIFIER_BIND_ADDRESS:-127.0.0.1}:${NOTIFIER_PORT:-8080}:8080"
+    environment:
+      NOTIFIER_ADMIN_PASSWORD: "${NOTIFIER_ADMIN_PASSWORD:-}"
+      NOTIFIER_SECURE_COOKIE: "${NOTIFIER_SECURE_COOKIE:-false}"
+    volumes:
+      - notifier-data:/data
+    restart: unless-stopped
+    stop_grace_period: 40s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  notifier-data:

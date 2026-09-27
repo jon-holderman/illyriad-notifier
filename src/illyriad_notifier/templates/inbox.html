@@ -1,0 +1,136 @@
+{% extends 'base.html' %}{% block title %}Inbox · Illyriad Notifier{% endblock %}{% block content %}
+<div class="page-heading">
+<div>
+<span class="eyebrow">EMPIRE ACTIVITY</span>
+<h1>Notification inbox</h1>
+<p class="muted">Everything that happened. Only what matters gets through.</p>
+</div>
+<div class="connection">
+<span class="dot {% if meta.get('last_error') %}warning{% endif %}">
+</span>
+{% if meta.get('last_success') %}Last fetched {{ meta.last_success[:16].replace('T',' ') }}{% else %}Waiting for your first feed{% endif %}
+</div>
+</div>
+{% if meta.get('last_error') %}
+<div class="error" role="alert">{{ meta.last_error }} <a href="/settings">Connection settings →</a>
+</div>
+{% endif %}
+<div class="metrics">
+<a href="/">
+<span>IN YOUR INBOX</span>
+<strong>{{ stats.total }}</strong>
+<small>Collected notifications</small>
+</a>
+<a href="/?unread=true">
+<span>UNREAD</span>
+<strong>{{ stats.unread }}</strong>
+<small>Ready to review</small>
+</a>
+<a href="/?status=sent">
+<span>FORWARDED</span>
+<strong>{{ stats.get('sent',0) }}</strong>
+<small>Accepted by ntfy</small>
+</a>
+<a href="/?status=failed">
+<span>NEEDS ATTENTION</span>
+<strong>{{ stats.get('failed',0) }}</strong>
+<small>{{ stats.get('pending',0) }} pending delivery</small>
+</a>
+</div>
+<section class="panel">
+<form class="filters" method="get" action="/">
+<label>Search<input type="search" name="q" placeholder="Search notifications…" value="{{ filters.q }}" maxlength="200">
+</label>
+{% for field,kind,label in [('town','town','Town'),('type_id','type','Type'),('category','category','Category')] %}
+<label>{{ label }}<select name="{{ field }}">
+<option value="">{{ {'Town':'All towns','Type':'All types','Category':'All categories'}[label] }}</option>
+{% for item in catalog[kind] %}
+<option value="{{ item.id }}" {% if filters[field]==item.id %}selected{% endif %}>{{ item.label }} · {{ item.id }}</option>
+{% endfor %}
+</select>
+</label>
+{% endfor %}
+<label>Delivery<select name="status">
+<option value="">All statuses</option>
+{% for value,label in [('history','Initial history'),('kept','Inbox only'),('pending','Pending'),('sent','Sent'),('failed','Failed')] %}
+<option value="{{ value }}" {% if filters.status==value %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select>
+</label>
+<label>From<input type="date" name="since" value="{{ filters.since }}">
+</label>
+<label>Through<input type="date" name="until" value="{{ filters.until }}">
+</label>
+<label class="checkbox">
+<input type="checkbox" name="unread" value="true" {% if filters.unread %}checked{% endif %}>Unread only</label>
+<div class="actions">
+<button class="primary">Apply filters</button>
+<a class="button quiet" href="/">Reset</a>
+</div>
+</form>
+<div class="section-heading">
+<h2>Recent activity <span class="count">{{ total }}</span>
+</h2>
+<span class="hint">Newest first</span>
+</div>
+{% if events %}
+<div class="table-wrap">
+<table class="activity-table">
+<thead>
+<tr>
+<th>Notification</th>
+<th>Town</th>
+<th>Delivery</th>
+<th>Occurred · UTC</th>
+</tr>
+</thead>
+<tbody>
+{% for event in events %}
+<tr class="{% if not event.is_read %}unread{% endif %}">
+<td>
+<a class="event-title" href="/notifications/{{ event.id }}">
+{% if not event.is_read %}
+<span class="unread-dot" aria-label="Unread">
+</span>
+{% endif %}{{ event.detail[:125] or 'Notification' }}{% if event.detail|length>125 %}…{% endif %}
+</a>
+<div class="event-meta">{{ labels.type.get(event.type_id,'Type') }} · {{ event.type_id }} <span> / </span> {{ labels.category.get(event.category_id,'Category') }} · {{ event.category_id }}</div>
+</td>
+<td class="nowrap">{{ labels.town.get(event.town_id,'Town') }} <small>#{{ event.town_id }}</small>
+</td>
+<td>
+<span class="badge {{ event.status }}">{{ {'kept':'Inbox only','history':'Initial history'}.get(event.status,event.status|capitalize) }}</span>
+</td>
+<td class="date">{{ event.occurred_at[:10] }}<small>{{ event.occurred_at[11:19] }}</small>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<div class="pagination">
+<span class="hint">Page {{ page }} · {{ total }} notifications</span>
+<div class="actions">
+{% if page>1 %}
+<a class="button" href="{{ previous }}">← Previous</a>
+{% endif %}{% if page*40<total %}
+<a class="button" href="{{ following }}">Next →</a>
+{% endif %}
+</div>
+</div>
+{% else %}
+<div class="empty">
+<span class="empty-icon">◎</span>
+<h2>
+{% if stats.total %}No notifications match{% else %}A quieter way to keep up{% endif %}
+</h2>
+<p>
+{% if stats.total %}Try a different town, type, or date range.{% else %}Connect your Illyriad feed to collect your notifications.<br>Your existing history will stay in the inbox without being forwarded.{% endif %}
+</p>
+<a class="button primary" href="{% if stats.total %}/{% else %}/settings{% endif %}">
+{% if stats.total %}Clear filters{% else %}Connect your feed →{% endif %}
+</a>
+</div>
+{% endif %}
+</section>
+{% endblock %}

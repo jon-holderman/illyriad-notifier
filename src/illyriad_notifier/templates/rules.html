@@ -1,0 +1,118 @@
+{% extends 'base.html' %}{% block title %}Rules · Illyriad Notifier{% endblock %}{% block content %}
+<div class="page-heading">
+<div>
+<span class="eyebrow">LESS NOISE, MORE SIGNAL</span>
+<h1>Notification rules</h1>
+<p class="muted">Choose what reaches your phone. Everything stays in your inbox.</p>
+</div>
+<span class="badge">First matching rule wins</span>
+</div>
+<section class="panel">
+<div class="section-heading">
+<h2>Your rules <span class="count">{{ rules|length }}</span>
+</h2>
+<span class="hint">Lower order runs first; ties use rule ID</span>
+</div>
+{% if rules %}
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Rule</th>
+<th>Match</th>
+<th>Action</th>
+<th>Manage</th>
+</tr>
+</thead>
+<tbody>
+{% for item in rules %}
+<tr>
+<td>{{ item.position }}</td>
+<td>
+<strong>{{ item.name }}</strong>
+<small>#{{ item.id }} · {{ 'Enabled' if item.enabled else 'Disabled' }}</small>
+</td>
+<td>
+<small>Types: {{ item.type_ids or 'Any' }}<br>Categories: {{ item.category_ids or 'Any' }}<br>Towns: {{ item.town_ids or 'Any' }}</small>
+</td>
+<td>
+<span class="badge {{ 'sent' if item.action=='forward' else 'kept' }}">{{ 'Forward to ntfy' if item.action=='forward' else 'Inbox only' }}</span>
+{% if item.action=='forward' %}
+<small>{{ item.topic or 'Default topic' }} · Priority {{ item.priority }}</small>
+{% endif %}
+</td>
+<td>
+<div class="actions">
+<a class="button" href="/rules/{{ item.id }}/edit">Edit</a>
+<form method="post" action="/rules/{{ item.id }}/delete">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<button class="quiet danger">Delete</button>
+</form>
+</div>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty compact">
+<h2>Nothing forwarded by default.</h2>
+<p>Create your first rule below to choose what gets through.</p>
+</div>
+{% endif %}
+<div class="panel-note">Unmatched notifications → Inbox only. Rule changes apply to future imports.</div>
+</section>
+<section class="panel padded">
+<span class="eyebrow">{{ 'EDIT RULE' if rule.id else 'NEW RULE' }}</span>
+<h2>{{ rule.name if rule.id else 'Make room for what matters' }}</h2>
+<form method="post" action="/rules/save">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<input type="hidden" name="rule_id" value="{{ rule.id }}">
+<div class="form-grid">
+<label class="span-two">Rule name<input name="name" value="{{ rule.name }}" placeholder="Military updates for my capital" required maxlength="100">
+</label>
+<label>Order<input name="position" type="number" min="0" max="9999" value="{{ rule.position }}" required>
+</label>
+</div>
+<div class="form-grid">
+{% for kind,field,label in [('type','type_ids','Notification types'),('category','category_ids','Overall categories'),('town','town_ids','Towns')] %}
+<label>{{ label }}<select multiple size="5" name="{{ field }}">
+{% for item in catalog[kind] %}
+<option value="{{ item.id }}" {% if item.id in rule[field].split(',') %}selected{% endif %}>{{ item.label }} · {{ item.id }}</option>
+{% endfor %}
+</select>
+<span class="hint">No selection means any. Use Ctrl / ⌘ to select multiple.</span>
+</label>
+{% endfor %}
+</div>
+<p class="hint">Selections within a field match any selected value. Different fields must all match. Import your feed first to populate choices; add friendly names in Settings.</p>
+<div class="form-grid">
+<label>When matched<select name="action">
+<option value="keep" {% if rule.action=='keep' %}selected{% endif %}>Keep in inbox only</option>
+<option value="forward" {% if rule.action=='forward' %}selected{% endif %}>Forward to ntfy</option>
+</select>
+</label>
+<label>Topic override<input name="topic" value="{{ rule.topic }}" placeholder="Use default topic" maxlength="64">
+</label>
+<label>Priority<select name="priority">
+{% for number,label in [(1,'Minimum'),(2,'Low'),(3,'Normal'),(4,'High'),(5,'Urgent')] %}
+<option value="{{ number }}" {% if rule.priority==number %}selected{% endif %}>{{ number }} · {{ label }}</option>
+{% endfor %}
+</select>
+</label>
+</div>
+<label class="checkbox">
+<input type="checkbox" name="enabled" value="true" {% if rule.enabled %}checked{% endif %}>Enable this rule</label>
+<div class="actions">
+<button class="primary">{{ 'Save changes' if rule.id else 'Create rule' }}</button>
+<button formaction="/rules/preview">Preview matching notifications</button>
+{% if rule.id %}
+<a class="button quiet" href="/rules">Cancel</a>
+{% endif %}
+</div>
+<p class="hint">Preview checks this rule alone against the latest 200 stored notifications. It does not save or send anything.</p>
+</form>
+</section>
+{% endblock %}
