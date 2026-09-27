@@ -2,6 +2,8 @@ FROM ghcr.io/astral-sh/uv:0.12.17 AS uv
 FROM python:3.13-slim
 COPY --from=uv /uv /uvx /bin/
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy NOTIFIER_DATA_DIR=/data
+LABEL org.opencontainers.image.source="https://github.com/jon-holderman/illyriad-notifier"
+LABEL org.opencontainers.image.description="Self-hosted Illyriad notification inbox and ntfy relay"
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project

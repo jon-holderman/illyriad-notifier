@@ -1,0 +1,38 @@
+name: Quality
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          version: "0.12.17"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pyright
+      - run: uv run pytest
+      - name: Build application container
+        run: docker build --file Containerfile --tag notifier-test .
+      - name: Check container startup
+        run: |
+          docker run -d --name notifier-test -p 127.0.0.1:18080:8080 \
+            -e NOTIFIER_ADMIN_PASSWORD=ci-only-not-a-real-password notifier-test
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:18080/healthz; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs notifier-test
+          exit 1
+      - name: Stop test container
+        if: always()
+        run: docker rm -f notifier-test || true

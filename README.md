@@ -14,7 +14,20 @@ One container, one persistent volume, one administrator. Independent of Quarterm
 - SQLite-backed deduplication, retry state and history; encrypted API credentials.
 - Initial history import without forwarding. No matching rule means inbox only.
 
-## Start with Podman Compose
+## Run the published image
+
+Download `compose.release.yaml` and `.env.example` from the latest GitHub release.
+Rename `.env.example` to `.env` and set a unique administrator password. Then run:
+
+```sh
+podman compose -f compose.release.yaml up -d
+```
+
+The image is `ghcr.io/jon-holderman/illyriad-notifier:0.1.0`, built for Linux
+AMD64 and ARM64. Docker Compose supports the same file. Use a version tag or
+immutable digest for deployments; `latest` tracks tagged releases.
+
+## Build locally with Podman Compose
 
 ```sh
 cp .env.example .env
@@ -153,3 +166,11 @@ uv run pyright
 
 See [the architecture decision](docs/decisions/0001-standalone-notifier.md) for
 scope, boundaries, delivery guarantees and deferred features.
+
+## Releases
+
+GitHub Actions runs tests, lint, formatting, typing, and a container startup
+check before publishing an image. Main builds receive a full commit-SHA tag;
+`v*` Git tags matching the project version publish versioned multi-architecture
+images and a GitHub release with the Compose bundle. All builds use GitHub-hosted
+runners; they do not need homelab access or deployment credentials.
