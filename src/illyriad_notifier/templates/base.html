@@ -7,7 +7,7 @@
 <title>
 {% block title %}Illyriad Notifier{% endblock %}
 </title>
-<link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='app.css').path }}">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -38,7 +38,7 @@
 {% endif %}{% block content %}{% endblock %}
 </main>
 <footer>
-<span>Illyriad Notifier <span class="muted">/ 0.1.0</span>
+<span>Illyriad Notifier <span class="muted">/ 0.1.1</span>
 </span>
 <span>Self-hosted · All times UTC</span>
 </footer>

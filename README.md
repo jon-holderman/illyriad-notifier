@@ -23,7 +23,7 @@ Rename `.env.example` to `.env` and set a unique administrator password. Then ru
 podman compose -f compose.release.yaml up -d
 ```
 
-The image is `ghcr.io/jon-holderman/illyriad-notifier:0.1.0`, built for Linux
+The image is `ghcr.io/jon-holderman/illyriad-notifier:0.1.1`, built for Linux
 AMD64 and ARM64. Docker Compose supports the same file. Use a version tag or
 immutable digest for deployments; `latest` tracks tagged releases.
 

@@ -180,3 +180,14 @@ def test_validation_does_not_change_settings(client):
     )
     assert response.status_code == 400
     assert client.app.state.store.settings()["api_key"] == ""
+
+
+def test_stylesheet_behind_tls_terminating_proxy(client):
+    # The proxy serves HTTPS, while the app receives HTTP without trusting headers.
+    response = client.get("/login", headers={"x-forwarded-proto": "https"})
+    href = re.search(r'<link rel="stylesheet" href="([^"]+)"', response.text)[1]
+    assert href == "/static/app.css"
+    stylesheet = client.get(href)
+    assert stylesheet.status_code == 200
+    assert stylesheet.headers["content-type"].startswith("text/css")
+    assert ".topbar" in stylesheet.text
